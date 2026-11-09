@@ -1,10 +1,11 @@
 #!/bin/sh
-# Builds release/Willy's Code Closet.app: a renamed copy of the repo-local Electron.app whose
+# Builds release/Willy's Code Hole.app: a renamed copy of the repo-local Electron.app whose
 # Contents/Resources/app symlinks to this checkout, so it always loads the current out/.
 set -e
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$REPO/node_modules/electron/dist/Electron.app"
-APP="$REPO/release/Willy's Code Closet.app"
+NAME="Willy's Code Hole"
+APP="$REPO/release/$NAME.app"
 ICONSET="$REPO/release/icon.iconset"
 VERSION="$(node -p "require('$REPO/package.json').version")"
 
@@ -14,14 +15,14 @@ rm -f "$APP/Contents/Resources/default_app.asar"
 ln -sfn "$REPO" "$APP/Contents/Resources/app"
 
 P="$APP/Contents/Info.plist"
-plutil -replace CFBundleName -string "Willy's Code Closet" "$P"
-plutil -replace CFBundleDisplayName -string "Willy's Code Closet" "$P"
-plutil -replace CFBundleIdentifier -string "com.anvilsoftwarelabs.willys-code-closet" "$P"
+plutil -replace CFBundleName -string "$NAME" "$P"
+plutil -replace CFBundleDisplayName -string "$NAME" "$P"
+plutil -replace CFBundleIdentifier -string "com.anvilsoftwarelabs.willys-code-hole" "$P"
 plutil -replace CFBundleVersion -string "$VERSION" "$P"
 plutil -replace CFBundleShortVersionString -string "$VERSION" "$P"
 plutil -replace CFBundleIconFile -string "icon.icns" "$P"
-mv -f "$APP/Contents/MacOS/Electron" "$APP/Contents/MacOS/Willy's Code Closet"
-plutil -replace CFBundleExecutable -string "Willy's Code Closet" "$P"
+mv -f "$APP/Contents/MacOS/Electron" "$APP/Contents/MacOS/$NAME"
+plutil -replace CFBundleExecutable -string "$NAME" "$P"
 
 rm -rf "$ICONSET" && mkdir -p "$ICONSET"
 for s in 16 32 128 256 512; do

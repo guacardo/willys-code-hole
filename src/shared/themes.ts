@@ -1,4 +1,4 @@
-export type ThemeId = 'closet' | 'monokai' | 'paper'
+export type ThemeId = 'hole' | 'monokai' | 'paper'
 
 export type Theme = {
   label: string
@@ -20,8 +20,8 @@ export type Theme = {
 }
 
 export const themes: Record<ThemeId, Theme> = {
-  closet: {
-    label: 'Closet',
+  hole: {
+    label: 'Hole',
     scheme: 'dark',
     bg: '#14161a',
     panel: '#1c1f25',
@@ -76,4 +76,4 @@ export const themes: Record<ThemeId, Theme> = {
   },
 }
 
-export const defaultTheme: ThemeId = 'closet'
+export const defaultTheme: ThemeId = 'hole'

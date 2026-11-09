@@ -6,7 +6,7 @@ import { ProjectManager } from './projects'
 import { VoiceManager } from './voice'
 import { ApiServer } from './api'
 import { adoptShellPath } from './shell'
-import type { ClosetConfig, HarnessEvent, ImageAttachment, PermissionDecision, Tab } from '../shared/types'
+import type { HoleConfig, HarnessEvent, ImageAttachment, PermissionDecision, Tab } from '../shared/types'
 
 let win: BrowserWindow | null = null
 let config = loadConfig()
@@ -22,13 +22,13 @@ function send(channel: string, payload: unknown) {
 }
 
 function emit(e: HarnessEvent) {
-  send('closet:event', e)
+  send('hole:event', e)
   api?.broadcast(e)
 }
 
 process.on('uncaughtException', (err) => {
   console.error(err)
-  if (!quitting) dialog.showErrorBox('Willy\'s Code Closet', err.stack ?? String(err))
+  if (!quitting) dialog.showErrorBox('Willy\'s Code Hole', err.stack ?? String(err))
 })
 
 function createWindow() {
@@ -36,7 +36,7 @@ function createWindow() {
     width: 1280,
     height: 860,
     minWidth: 760,
-    title: "Willy's Code Closet",
+    title: "Willy's Code Hole",
     icon: join(__dirname, '../../resources/icon.png'),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     autoHideMenuBar: true,
@@ -52,7 +52,7 @@ function createWindow() {
   else win.loadFile(join(__dirname, '../renderer/index.html'))
 }
 
-app.setName("Willy's Code Closet")
+app.setName("Willy's Code Hole")
 
 app.whenReady().then(async () => {
   await adoptShellPath()
@@ -110,7 +110,7 @@ app.whenReady().then(async () => {
     return projects.openInEditor({ root: target.root ?? roots[0], file: target.file, line: target.line, cwd: tab?.cwd })
   })
   ipcMain.handle('config:get', () => config)
-  ipcMain.handle('config:set', (_e, patch: Partial<ClosetConfig>) => {
+  ipcMain.handle('config:set', (_e, patch: Partial<HoleConfig>) => {
     config = { ...config, ...patch }
     saveConfig(config)
     return config

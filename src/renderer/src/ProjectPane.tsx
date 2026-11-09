@@ -7,7 +7,7 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
   const projects = () => props.tab.projects
   const selectedRoot = () => props.tab.pinnedProject ?? projects()[0]?.root
   const mode = () => props.tab.paneMode
-  const [info, { refetch, mutate }] = createResource(selectedRoot, (root) => window.closet.projectInfo(root))
+  const [info, { refetch, mutate }] = createResource(selectedRoot, (root) => window.hole.projectInfo(root))
   const [cmdDraft, setCmdDraft] = createSignal<string | null>(null)
   let size = { cols: 100, rows: 30 }
   let term: TermApi | undefined
@@ -21,7 +21,7 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
     on(
       () => [selectedRoot(), mode(), info()?.gitRunning] as const,
       ([root, m, gitRunning]) => {
-        if (root && m === 'git' && gitRunning === false && !gitExited()) void window.closet.startGit(root, size.cols, size.rows).then(mutate)
+        if (root && m === 'git' && gitRunning === false && !gitExited()) void window.hole.startGit(root, size.cols, size.rows).then(mutate)
       },
     ),
   )
@@ -31,8 +31,8 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
     const root = selectedRoot()
     if (!root) return
     const draft = cmdDraft()
-    if (draft !== null && draft.trim() && draft.trim() !== info()?.devCommand) await window.closet.setDevCommand(root, draft.trim())
-    mutate(await window.closet.startDev(root, size.cols, size.rows))
+    if (draft !== null && draft.trim() && draft.trim() !== info()?.devCommand) await window.hole.setDevCommand(root, draft.trim())
+    mutate(await window.hole.startDev(root, size.cols, size.rows))
     setCmdDraft(null)
   }
 
@@ -69,7 +69,7 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
           <button classList={{ on: mode() === 'git' }} onClick={() => setPane(props.tabId, { paneMode: 'git' })}>
             Git
           </button>
-          <button class="icon" title="Open project in editor" disabled={!selectedRoot()} onClick={() => window.closet.openInEditor({ tabId: props.tabId, root: selectedRoot() })}>
+          <button class="icon" title="Open project in editor" disabled={!selectedRoot()} onClick={() => window.hole.openInEditor({ tabId: props.tabId, root: selectedRoot() })}>
             ↗
           </button>
           <button class="icon" title="Close pane (⌘J)" onClick={props.onClose}>
@@ -99,12 +99,12 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
               }
             >
               <span class="mono muted">{info()?.devCommand}</span>
-              <button class="danger" onClick={() => selectedRoot() && window.closet.stopDev(selectedRoot()!).then(() => refetch())}>
+              <button class="danger" onClick={() => selectedRoot() && window.hole.stopDev(selectedRoot()!).then(() => refetch())}>
                 Stop
               </button>
             </Show>
             <span class="muted small" title={info()?.devLog}>
-              log: ~/.config/willys-code-closet/logs/{info()?.name}.dev.log
+              log: ~/.config/willys-code-hole/logs/{info()?.name}.dev.log
             </span>
           </div>
         </Show>
@@ -119,7 +119,7 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
               onClick={() => {
                 if (!selectedRoot()) return
                 relaunch = true
-                void window.closet.stopGit(selectedRoot()!)
+                void window.hole.stopGit(selectedRoot()!)
               }}
             >
               Restart
@@ -143,7 +143,7 @@ export default function ProjectPane(props: { tabId: string; tab: TabState; width
             <button
               onClick={() => {
                 setGitExited(false)
-                if (selectedRoot()) void window.closet.startGit(selectedRoot()!, size.cols, size.rows).then(mutate)
+                if (selectedRoot()) void window.hole.startGit(selectedRoot()!, size.cols, size.rows).then(mutate)
               }}
             >
               Restart

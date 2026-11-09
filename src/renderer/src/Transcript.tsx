@@ -52,7 +52,7 @@ function Row(props: { item: Item; tabId: string; showCost: boolean; decide: (id:
                       title={`Open ${fp()} in editor`}
                       onClick={(e) => {
                         e.stopPropagation()
-                        window.closet.openInEditor({ tabId: props.tabId, file: fp(), line: lineOf(t.input) })
+                        window.hole.openInEditor({ tabId: props.tabId, file: fp(), line: lineOf(t.input) })
                       }}
                     >
                       ↗

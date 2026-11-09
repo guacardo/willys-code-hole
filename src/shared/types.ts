@@ -19,7 +19,7 @@ export type Layout = { tabs: Tab[]; groups: string[] }
 
 export type EditorId = 'code' | 'cursor' | 'zed' | 'xcode' | 'idea' | 'webstorm' | 'subl'
 
-export type ClosetConfig = {
+export type HoleConfig = {
   defaultCwd: string
   defaultModel?: string
   defaultPermissionMode: PermissionMode
@@ -126,7 +126,7 @@ export type TabEvent =
 
 export type HarnessEvent = TabEvent & { tabId: string }
 
-export type ClosetApi = {
+export type HoleApi = {
   getLayout(): Promise<Layout>
   moveTab(id: string, group: string, beforeId: string | null): Promise<Layout>
   createGroup(name: string): Promise<Layout>
@@ -140,8 +140,8 @@ export type ClosetApi = {
   send(id: string, text: string, images?: ImageAttachment[]): Promise<void>
   cancel(id: string): Promise<void>
   permission(id: string, requestId: string, decision: PermissionDecision): Promise<void>
-  getConfig(): Promise<ClosetConfig>
-  setConfig(patch: Partial<ClosetConfig>): Promise<ClosetConfig>
+  getConfig(): Promise<HoleConfig>
+  setConfig(patch: Partial<HoleConfig>): Promise<HoleConfig>
   pickDirectory(defaultPath?: string): Promise<string | null>
   onEvent(handler: (e: HarnessEvent) => void): () => void
   projectInfo(root: string): Promise<ProjectInfo>

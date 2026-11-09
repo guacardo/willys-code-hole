@@ -83,7 +83,7 @@ export default function Markdown(props: { text: string; class?: string; tabId?: 
     if (!el) return
     e.preventDefault()
     const line = el.dataset.line ? Number(el.dataset.line) : undefined
-    window.closet.openInEditor({ tabId: props.tabId, file: el.dataset.file, line })
+    window.hole.openInEditor({ tabId: props.tabId, file: el.dataset.file, line })
   }
   return <div class={`md ${props.class ?? ''}`} innerHTML={html()} onClick={onClick} />
 }

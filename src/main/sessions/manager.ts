@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { basename } from 'node:path'
-import type { ClosetConfig, HarnessEvent, ImageAttachment, Layout, PermissionDecision, Tab } from '../../shared/types'
+import type { HoleConfig, HarnessEvent, ImageAttachment, Layout, PermissionDecision, Tab } from '../../shared/types'
 import { loadLayout, saveLayout } from '../config'
 import { TabSession } from './tab'
 
@@ -10,7 +10,7 @@ export class TabManager {
   private sessions = new Map<string, TabSession>()
 
   constructor(
-    private config: () => ClosetConfig,
+    private config: () => HoleConfig,
     private emit: (e: HarnessEvent) => void,
   ) {
     const saved = loadLayout()

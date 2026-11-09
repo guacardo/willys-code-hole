@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ClosetApi, HarnessEvent, PtyEvent, VoiceEvent } from '../shared/types'
+import type { HoleApi, HarnessEvent, PtyEvent, VoiceEvent } from '../shared/types'
 
-const api: ClosetApi = {
+const api: HoleApi = {
   getLayout: () => ipcRenderer.invoke('layout:get'),
   moveTab: (id, group, beforeId) => ipcRenderer.invoke('tabs:move', id, group, beforeId),
   createGroup: (name) => ipcRenderer.invoke('groups:create', name),
@@ -20,8 +20,8 @@ const api: ClosetApi = {
   pickDirectory: (defaultPath) => ipcRenderer.invoke('dialog:pickDirectory', defaultPath),
   onEvent: (handler) => {
     const listener = (_: unknown, e: HarnessEvent) => handler(e)
-    ipcRenderer.on('closet:event', listener)
-    return () => ipcRenderer.removeListener('closet:event', listener)
+    ipcRenderer.on('hole:event', listener)
+    return () => ipcRenderer.removeListener('hole:event', listener)
   },
   projectInfo: (root) => ipcRenderer.invoke('projects:info', root),
   startDev: (root, cols, rows) => ipcRenderer.invoke('projects:startDev', root, cols, rows),
@@ -51,4 +51,4 @@ const api: ClosetApi = {
   openInEditor: (target) => ipcRenderer.invoke('editor:open', target),
 }
 
-contextBridge.exposeInMainWorld('closet', api)
+contextBridge.exposeInMainWorld('hole', api)

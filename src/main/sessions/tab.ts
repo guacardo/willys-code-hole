@@ -298,7 +298,7 @@ export class TabSession {
       signal.addEventListener('abort', () => this.resolvePermission(requestId, 'deny'), { once: true })
       this.emit({ type: 'permission_request', requestId, tool: name, summary: summarize(name, input), input, rules, persistent })
     })
-    if (decision === 'deny') return { behavior: 'deny', message: 'User denied this tool call in Code Closet' }
+    if (decision === 'deny') return { behavior: 'deny', message: 'User denied this tool call in Code Hole' }
     if (decision === 'always') {
       if (suggestions.length) return { behavior: 'allow', updatedInput: input, updatedPermissions: suggestions }
       this.alwaysAllow.add(name)

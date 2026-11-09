@@ -4,7 +4,7 @@ import { defaultTheme, themes, type ThemeId } from '../../shared/themes'
 const [themeId, setThemeId] = createSignal<ThemeId>(defaultTheme)
 export { themeId }
 
-const vars: Record<string, keyof (typeof themes)['closet']> = {
+const vars: Record<string, keyof (typeof themes)['hole']> = {
   '--bg': 'bg',
   '--panel': 'panel',
   '--panel2': 'panel2',

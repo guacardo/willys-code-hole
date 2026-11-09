@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { basename } from 'node:path'
-import type { ClosetConfig, HarnessEvent, ImageAttachment, PermissionDecision } from '../shared/types'
+import type { HoleConfig, HarnessEvent, ImageAttachment, PermissionDecision } from '../shared/types'
 import type { TabManager } from './sessions/manager'
 
 const BODY_MAX = 50 * 1024 * 1024
@@ -12,7 +12,7 @@ export class ApiServer {
 
   constructor(
     private tabs: TabManager,
-    private config: () => ClosetConfig,
+    private config: () => HoleConfig,
   ) {
     this.server = createServer((req, res) => void this.handle(req, res).catch((err) => this.fail(res, 500, String(err))))
   }
@@ -48,7 +48,7 @@ export class ApiServer {
     const parts = url.pathname.split('/').filter(Boolean)
     const method = req.method ?? 'GET'
 
-    if (method === 'GET' && parts.length === 0) return this.json(res, { ok: true, name: "Willy's Code Closet" })
+    if (method === 'GET' && parts.length === 0) return this.json(res, { ok: true, name: "Willy's Code Hole" })
 
     if (parts[0] === 'tabs') {
       if (method === 'GET' && parts.length === 1) return this.json(res, { tabs: this.listTabs() })

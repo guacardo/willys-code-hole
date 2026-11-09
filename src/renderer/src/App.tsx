@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import type { ClosetConfig, PermissionDecision, PermissionMode } from '../../shared/types'
+import type { HoleConfig, PermissionDecision, PermissionMode } from '../../shared/types'
 import Sidebar from './Sidebar'
 import Transcript from './Transcript'
 import LoadedPanel from './LoadedPanel'
@@ -13,7 +13,7 @@ import type { ImageAttachment } from '../../shared/types'
 import { addUser, applyEvent, emptyTabState, setDevRunning, setPane, orderedTabs, removeTab, setActive, setLayout, state, upsertTab } from './store'
 
 export default function App() {
-  const [config, setConfig] = createSignal<ClosetConfig | null>(null)
+  const [config, setConfig] = createSignal<HoleConfig | null>(null)
   const [draft, setDraft] = createSignal('')
   const [showLoaded, setShowLoaded] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
@@ -25,7 +25,7 @@ export default function App() {
 
   const mic = useMic({
     onText: async (text) => {
-      const cfg = await window.closet.getConfig()
+      const cfg = await window.hole.getConfig()
       setDraft((d) => (d.trim() ? `${d.replace(/\s+$/, '')} ${text}` : text))
       if (cfg.voice?.autoSend) void send()
       else {
@@ -126,21 +126,21 @@ export default function App() {
   const ts = createMemo(() => (state.activeId ? state.byTab[state.activeId] : undefined) ?? emptyTabState())
 
   onMount(() => {
-    window.closet.getConfig().then((cfg) => {
+    window.hole.getConfig().then((cfg) => {
       setConfig(cfg)
       applyTheme(cfg.theme)
     })
-    window.closet.getLayout().then((layout) => {
+    window.hole.getLayout().then((layout) => {
       setLayout(layout)
       const first = orderedTabs()[0]
       if (first) select(first.id)
     })
-    const offPty = window.closet.onPty((e) => {
+    const offPty = window.hole.onPty((e) => {
       if (!e.key.endsWith('::dev')) return
       setDevRunning(e.key.slice(0, -'::dev'.length), e.type === 'data')
     })
     onCleanup(offPty)
-    const off = window.closet.onEvent((e) => {
+    const off = window.hole.onEvent((e) => {
       applyEvent(e)
       if (e.tabId === state.activeId && following()) queueMicrotask(() => scroller?.scrollTo({ top: scroller.scrollHeight }))
     })
@@ -191,7 +191,7 @@ export default function App() {
       }
       if (ev.key === 'Escape' && ts().busy && !(document.activeElement as HTMLElement | null)?.closest('.term')) {
         ev.preventDefault()
-        if (state.activeId) window.closet.cancel(state.activeId)
+        if (state.activeId) window.hole.cancel(state.activeId)
       } else if (mod && ev.key.toLowerCase() === 't') {
         ev.preventDefault()
         newTab(ev.shiftKey)
@@ -221,7 +221,7 @@ export default function App() {
 
   function select(id: string) {
     setActive(id)
-    window.closet.openTab(id)
+    window.hole.openTab(id)
     queueMicrotask(() => {
       scrollToBottom()
       input?.focus()
@@ -238,11 +238,11 @@ export default function App() {
   async function newTab(pick = false, group = '') {
     let cwd = config()?.defaultCwd ?? active()?.cwd
     if (pick || !cwd) {
-      const dir = await window.closet.pickDirectory(cwd)
+      const dir = await window.hole.pickDirectory(cwd)
       if (!dir) return
       cwd = dir
     }
-    const tab = await window.closet.createTab({ cwd, group })
+    const tab = await window.hole.createTab({ cwd, group })
     upsertTab(tab)
     select(tab.id)
   }
@@ -250,23 +250,23 @@ export default function App() {
   async function changeCwd() {
     const t = active()
     if (!t) return
-    const dir = await window.closet.pickDirectory(t.cwd)
+    const dir = await window.hole.pickDirectory(t.cwd)
     if (!dir || dir === t.cwd) return
-    const tab = await window.closet.createTab({ cwd: dir, name: t.name, group: t.group })
-    await window.closet.closeTab(t.id, { remove: true })
+    const tab = await window.hole.createTab({ cwd: dir, name: t.name, group: t.group })
+    await window.hole.closeTab(t.id, { remove: true })
     removeTab(t.id)
     upsertTab(tab)
     select(tab.id)
   }
 
   async function closeTab(id: string) {
-    await window.closet.closeTab(id, { remove: true })
+    await window.hole.closeTab(id, { remove: true })
     removeTab(id)
     if (state.activeId) select(state.activeId)
   }
 
   async function rename(id: string, name: string) {
-    upsertTab(await window.closet.updateTab(id, { name }))
+    upsertTab(await window.hole.updateTab(id, { name }))
   }
 
   async function send() {
@@ -280,25 +280,25 @@ export default function App() {
     addUser(id, text)
     queueMicrotask(scrollToBottom)
     try {
-      await window.closet.send(id, text, imgs)
+      await window.hole.send(id, text, imgs)
     } catch (err) {
       applyEvent({ tabId: id, type: 'error', message: err instanceof Error ? err.message : String(err) })
     }
   }
 
   function decide(requestId: string, decision: PermissionDecision) {
-    if (state.activeId) window.closet.permission(state.activeId, requestId, decision)
+    if (state.activeId) window.hole.permission(state.activeId, requestId, decision)
     input.focus()
   }
 
   async function setModel(model: string) {
     const t = active()
-    if (t) upsertTab(await window.closet.updateTab(t.id, { model: model || undefined }))
+    if (t) upsertTab(await window.hole.updateTab(t.id, { model: model || undefined }))
   }
 
   async function setMode(mode: PermissionMode) {
     const t = active()
-    if (t) upsertTab(await window.closet.updateTab(t.id, { permissionMode: mode }))
+    if (t) upsertTab(await window.hole.updateTab(t.id, { permissionMode: mode }))
   }
 
   return (
@@ -435,7 +435,7 @@ export default function App() {
                     </button>
                   }
                 >
-                  <button class="danger" onClick={() => state.activeId && window.closet.cancel(state.activeId)}>
+                  <button class="danger" onClick={() => state.activeId && window.hole.cancel(state.activeId)}>
                     Stop
                   </button>
                 </Show>

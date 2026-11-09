@@ -1,6 +1,7 @@
 import { createMemo, createSignal, For, Show } from 'solid-js'
 import type { Layout, Tab } from '../../shared/types'
 import { layout, setLayout, state } from './store'
+import icon from '../../../resources/icon.svg'
 
 type Props = {
   onSelect: (id: string) => void
@@ -22,10 +23,10 @@ export default function Sidebar(props: Props & { width?: number }) {
   const [drag, setDrag] = createSignal<Drag | null>(null)
   const [over, setOver] = createSignal<Over | null>(null)
   const lay = createMemo(layout)
-  const [folded, setFolded] = createSignal<string[]>(JSON.parse(localStorage.getItem('closet.folded') ?? '[]'))
+  const [folded, setFolded] = createSignal<string[]>(JSON.parse(localStorage.getItem('hole.folded') ?? '[]'))
   const saveFolded = (names: string[]) => {
     setFolded(names)
-    localStorage.setItem('closet.folded', JSON.stringify(names))
+    localStorage.setItem('hole.folded', JSON.stringify(names))
   }
   const isFolded = (name: string) => folded().includes(name)
   const toggleFold = (name: string) => saveFolded(isFolded(name) ? folded().filter((n) => n !== name) : [...folded(), name])
@@ -54,19 +55,19 @@ export default function Sidebar(props: Props & { width?: number }) {
     const taken = new Set(lay().groups.map((g) => g.name))
     let name = 'New group'
     for (let n = 2; taken.has(name); n++) name = `New group ${n}`
-    await apply(window.closet.createGroup(name))
+    await apply(window.hole.createGroup(name))
     setEditingGroup(name)
   }
 
   function dropOnGroup(name: string) {
     const d = drag()
     const o = over()
-    if (d?.kind === 'tab') apply(window.closet.moveTab(d.id, name, null))
+    if (d?.kind === 'tab') apply(window.hole.moveTab(d.id, name, null))
     else if (d?.kind === 'group' && d.name !== name && o?.kind === 'group' && o.pos) {
       const names = lay().groups.map((g) => g.name).filter((g) => g !== d.name)
       const i = names.indexOf(name) + (o.pos === 'after' ? 1 : 0)
       names.splice(i, 0, d.name)
-      apply(window.closet.reorderGroups(names))
+      apply(window.hole.reorderGroups(names))
     }
     endDrag()
   }
@@ -132,7 +133,7 @@ export default function Sidebar(props: Props & { width?: number }) {
             if (d?.kind === 'tab' && d.id !== tab.id && o?.kind === 'tab') {
               const i = siblings.findIndex((t) => t.id === tab.id)
               const before = o.pos === 'before' ? tab.id : (siblings[i + 1]?.id ?? null)
-              if (before !== d.id) apply(window.closet.moveTab(d.id, tab.group, before))
+              if (before !== d.id) apply(window.hole.moveTab(d.id, tab.group, before))
             }
             endDrag()
           }}
@@ -163,7 +164,7 @@ export default function Sidebar(props: Props & { width?: number }) {
   return (
     <aside class="sidebar" style={{ width: props.width ? `${props.width}px` : undefined }}>
       <div class="sidebar-head">
-        <span class="brand">Code Closet</span>
+        <img class="brand" src={icon} alt="Code Hole" />
         <span class="head-actions">
           <button class="icon" title="New tab in the current folder (⌘T)" onClick={props.onNew}>
             +
@@ -196,7 +197,7 @@ export default function Sidebar(props: Props & { width?: number }) {
                         setEditingGroup(null)
                         if (name && name !== g.name) {
                           if (isFolded(g.name)) saveFolded(folded().map((n) => (n === g.name ? name : n)))
-                          apply(window.closet.renameGroup(g.name, name))
+                          apply(window.hole.renameGroup(g.name, name))
                         }
                       }}
                       onCancel={() => setEditingGroup(null)}
@@ -275,7 +276,7 @@ export default function Sidebar(props: Props & { width?: number }) {
                     title="Remove group (tabs stay, ungrouped)"
                     onClick={(e) => {
                       e.stopPropagation()
-                      apply(window.closet.removeGroup(g.name))
+                      apply(window.hole.removeGroup(g.name))
                     }}
                   >
                     ×

@@ -1,4 +1,4 @@
-# Willy's Code Closet
+# Willy's Code Hole
 
 Electron + SolidJS wrapper around Claude Code via the Claude Agent SDK. Tabs are Claude Code sessions;
 group them, rename them, resume them across restarts. Uses your existing Claude Code login.
@@ -9,7 +9,7 @@ npm run dev         # the instance you're editing (renderer hot-reloads)
 npm run workbench   # a built instance to work *from*; unaffected by edits until rebuilt
 ```
 
-State: `~/.config/willys-code-closet/{config.json,tabs.json}`.
+State: `~/.config/willys-code-hole/{config.json,tabs.json}`.
 
 Layout: `src/main/sessions/` (one `TabSession` per tab wrapping an SDK `query()` in streaming-input
 mode, `TabManager` for persistence), `src/renderer/` (UI), `src/shared/types.ts` (IPC contract).
@@ -19,7 +19,7 @@ panel · ⌘J dev/git pane · Enter send · Esc cancel · y/a/n answer a permiss
 
 Project pane (⌘J): follows whichever git repo the agent touches (chips per repo, click to pin). Dev
 runs the repo's `dev` script (or a per-repo override) in a PTY shared by every tab on that repo, and
-mirrors output to `~/.config/willys-code-closet/logs/<repo>.dev.log` for the agent to read. Git runs
+mirrors output to `~/.config/willys-code-hole/logs/<repo>.dev.log` for the agent to read. Git runs
 lazygit. ↗ opens the repo, a tool row's file, or a `path/to/file.ts:42` span in a reply in your editor
 (picked in the session panel). node-pty is rebuilt for Electron on install via `@electron/rebuild`.
 

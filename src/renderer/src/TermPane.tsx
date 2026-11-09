@@ -23,7 +23,7 @@ export default function TermPane(props: {
     try {
       fit.fit()
       props.onSize?.(term.cols, term.rows)
-      window.closet.ptyResize(key, term.cols, term.rows)
+      window.hole.ptyResize(key, term.cols, term.rows)
     } catch {
       return
     }
@@ -31,13 +31,13 @@ export default function TermPane(props: {
 
   const nudge = () => {
     const k = key
-    window.closet.ptyResize(k, Math.max(20, term.cols - 1), term.rows)
-    setTimeout(() => k === key && window.closet.ptyResize(k, term.cols, term.rows), 60)
+    window.hole.ptyResize(k, Math.max(20, term.cols - 1), term.rows)
+    setTimeout(() => k === key && window.hole.ptyResize(k, term.cols, term.rows), 60)
   }
 
   const attach = async () => {
     term.reset()
-    const a = await window.closet.ptyAttach(key)
+    const a = await window.hole.ptyAttach(key)
     if (a.buffer && props.replay !== false) term.write(a.buffer)
     doFit()
     if (a.running && props.replay === false) nudge()
@@ -64,10 +64,10 @@ export default function TermPane(props: {
     })
     fit = new FitAddon()
     term.loadAddon(fit)
-    term.loadAddon(new WebLinksAddon((_e, uri) => void window.closet.openExternal(uri)))
+    term.loadAddon(new WebLinksAddon((_e, uri) => void window.hole.openExternal(uri)))
     term.open(host)
-    term.onData((d) => window.closet.ptyInput(key, d))
-    const off = window.closet.onPty((e) => {
+    term.onData((d) => window.hole.ptyInput(key, d))
+    const off = window.hole.onPty((e) => {
       if (e.key !== key) return
       if (e.type === 'data') term.write(e.data)
       else props.onExit?.(e.code)

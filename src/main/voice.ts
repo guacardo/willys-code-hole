@@ -3,7 +3,7 @@ import { createWriteStream, existsSync, mkdirSync, readdirSync, statSync } from 
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { systemPreferences } from 'electron'
-import type { ClosetConfig, VoiceEvent, VoiceStatus } from '../shared/types'
+import type { HoleConfig, VoiceEvent, VoiceStatus } from '../shared/types'
 import { configDir } from './config'
 import { which } from './shell'
 
@@ -40,7 +40,7 @@ export class VoiceManager {
   private micGranted: boolean | null = null
 
   constructor(
-    private config: () => ClosetConfig,
+    private config: () => HoleConfig,
     private emit: (e: VoiceEvent) => void,
   ) {}
 

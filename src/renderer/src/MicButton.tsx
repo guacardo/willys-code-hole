@@ -11,7 +11,7 @@ export function useMic(opts: { onText: (text: string) => void; onError: (message
   let timer: number | undefined
   const [progress, setProgress] = createSignal<number | null>(null)
   onMount(() => {
-    const off = window.closet.onVoice((e) => {
+    const off = window.hole.onVoice((e) => {
       if (e.type !== 'progress') return
       if (e.done) {
         setProgress(null)
@@ -56,7 +56,7 @@ export function useMic(opts: { onText: (text: string) => void; onError: (message
   async function start() {
     if (state() !== 'idle' && state() !== 'error') return
     try {
-      const ok = await window.closet.voiceRequestMic()
+      const ok = await window.hole.voiceRequestMic()
       if (!ok) throw new Error('Microphone access denied. Allow it in System Settings → Privacy & Security → Microphone.')
       handle = await startRecording()
       lastLoud = performance.now()
@@ -82,7 +82,7 @@ export function useMic(opts: { onText: (text: string) => void; onError: (message
         return
       }
       const wav = await h.stop()
-      const text = await window.closet.voiceTranscribe(wav)
+      const text = await window.hole.voiceTranscribe(wav)
       if (text) opts.onText(text)
       setState('idle')
     } catch (err) {

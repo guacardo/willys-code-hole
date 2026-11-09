@@ -1,7 +1,7 @@
-import type { ClosetApi } from '../../shared/types'
+import type { HoleApi } from '../../shared/types'
 
 declare global {
   interface Window {
-    closet: ClosetApi
+    hole: HoleApi
   }
 }

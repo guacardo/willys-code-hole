@@ -3,7 +3,7 @@ import { closeSync, existsSync, openSync, readFileSync, readSync } from 'node:fs
 import { homedir } from 'node:os'
 import { join, resolve, isAbsolute, basename, extname } from 'node:path'
 import { shell } from 'electron'
-import type { ClosetConfig, EditorId, ProjectInfo } from '../../shared/types'
+import type { HoleConfig, EditorId, ProjectInfo } from '../../shared/types'
 import { configDir } from '../config'
 import { which } from '../shell'
 import { PtyManager, type PtyEvent } from './pty'
@@ -44,8 +44,8 @@ export class ProjectManager {
   private editors: { id: EditorId; label: string; path: string }[] | null = null
 
   constructor(
-    private config: () => ClosetConfig,
-    private saveConfig: (patch: Partial<ClosetConfig>) => void,
+    private config: () => HoleConfig,
+    private saveConfig: (patch: Partial<HoleConfig>) => void,
     emit: (e: PtyEvent) => void,
   ) {
     this.ptys = new PtyManager(emit)

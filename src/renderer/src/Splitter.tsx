@@ -3,7 +3,7 @@ import { createSignal, onCleanup } from 'solid-js'
 export function persistedWidth(key: string, fallback: number, min: number, max: number) {
   let initial = fallback
   try {
-    const v = Number(localStorage.getItem(`closet.width.${key}`))
+    const v = Number(localStorage.getItem(`hole.width.${key}`))
     if (v >= min && v <= max) initial = v
   } catch {
     initial = fallback
@@ -13,7 +13,7 @@ export function persistedWidth(key: string, fallback: number, min: number, max: 
     const clamped = Math.round(Math.min(max, Math.max(min, w)))
     setWidthRaw(clamped)
     try {
-      localStorage.setItem(`closet.width.${key}`, String(clamped))
+      localStorage.setItem(`hole.width.${key}`, String(clamped))
     } catch {
       return
     }

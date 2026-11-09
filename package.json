@@ -1,6 +1,6 @@
 {
-  "name": "willys-code-closet",
-  "productName": "Willy's Code Closet",
+  "name": "willys-code-hole",
+  "productName": "Willy's Code Hole",
   "private": true,
   "version": "0.0.1",
   "main": "./out/main/index.js",
@@ -40,6 +40,6 @@
   "description": "Electron + SolidJS wrapper around Claude Code via the Agent SDK: tabs, groups, dev-server and lazygit panes, voice dictation.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/guacardo/willys-code-closet"
+    "url": "https://github.com/guacardo/willys-code-hole"
   }
 }

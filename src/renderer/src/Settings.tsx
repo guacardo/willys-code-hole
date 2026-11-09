@@ -1,24 +1,24 @@
 import { createResource, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import type { ClosetConfig, PermissionMode } from '../../shared/types'
+import type { HoleConfig, PermissionMode } from '../../shared/types'
 import { defaultTheme, themes, type ThemeId } from '../../shared/themes'
 import { applyTheme } from './theme'
 
 export default function Settings(props: { onClose: () => void }) {
-  const [config, { mutate }] = createResource(() => window.closet.getConfig())
-  const [editors] = createResource(() => window.closet.listEditors())
-  const [voice, { refetch: refetchVoice }] = createResource(() => window.closet.voiceStatus())
+  const [config, { mutate }] = createResource(() => window.hole.getConfig())
+  const [editors] = createResource(() => window.hole.listEditors())
+  const [voice, { refetch: refetchVoice }] = createResource(() => window.hole.voiceStatus())
   const [progress, setProgress] = createSignal<{ received: number; total: number } | null>(null)
 
   onMount(() => {
-    const off = window.closet.onVoice((e) => {
+    const off = window.hole.onVoice((e) => {
       if (e.type === 'progress') setProgress(e.done ? null : { received: e.received, total: e.total })
       void refetchVoice()
     })
     onCleanup(off)
   })
 
-  const patch = async (p: Partial<ClosetConfig>) => mutate(await window.closet.setConfig(p))
-  const patchVoice = async (p: Partial<NonNullable<ClosetConfig['voice']>>) => {
+  const patch = async (p: Partial<HoleConfig>) => mutate(await window.hole.setConfig(p))
+  const patchVoice = async (p: Partial<NonNullable<HoleConfig['voice']>>) => {
     await patch({ voice: { ...(config()?.voice ?? {}), ...p } })
     await refetchVoice()
   }
@@ -78,7 +78,7 @@ export default function Settings(props: { onClose: () => void }) {
             <input type="text" class="mono" value={short(config()?.defaultCwd)} readOnly />
             <button
               onClick={async () => {
-                const dir = await window.closet.pickDirectory(config()?.defaultCwd)
+                const dir = await window.hole.pickDirectory(config()?.defaultCwd)
                 if (dir) await patch({ defaultCwd: dir })
               }}
             >
