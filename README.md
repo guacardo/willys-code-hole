@@ -36,4 +36,4 @@ Remote API: the main process serves JSON on `127.0.0.1:7474` (`api.port` in conf
 and `POST /send {tab: <id|name|folder>, text, images?}`. Expose it on your tailnet with
 `tailscale serve --bg 7474`; set `api.login` to your Tailscale login to require the identity header it
 adds. The iOS companion and Shortcuts intent live in
-[willys-code-closet-ios](https://github.com/guacardo/willys-code-closet-ios).
+[willys-code-hole-ios](https://github.com/guacardo/willys-code-hole-ios).
