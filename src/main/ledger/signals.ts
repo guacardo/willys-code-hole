@@ -22,8 +22,16 @@ export function failureKinds(output: string): Record<string, number> {
   return kinds
 }
 
+/** An edit that changes text an earlier edit in the same run wrote: a Write over its own file, or an old_string line it produced. */
+function rewritesOwnText(tool: string, old: string, prior: { neu: string }[]): boolean {
+  if (!prior.length) return false
+  if (tool === 'Write') return true
+  const lines = old.split('\n').map((l) => l.trim()).filter((l) => l.length > 8)
+  return lines.some((l) => prior.some((p) => p.neu.includes(l)))
+}
+
 export function analyze(calls: Call[], gates: GateResult[] = []): Signals {
-  const edits = new Map<string, number>()
+  const rewrites = new Map<string, number>()
   const priorEdits: { file: string; old: string; neu: string }[] = []
   let reverts = 0
   let checkFailures = 0
@@ -55,11 +63,12 @@ export function analyze(calls: Call[], gates: GateResult[] = []): Signals {
     if (EDIT.has(c.name)) {
       const file = filePath(c)
       edited = true
-      edits.set(file, (edits.get(file) ?? 0) + 1)
       readsSinceEdit.delete(file)
-      const neu = String(c.input.new_string ?? '')
+      const neu = String(c.input.new_string ?? c.input.content ?? '')
       const old = String(c.input.old_string ?? '')
-      if (neu && priorEdits.some((p) => p.file === file && p.old === neu && (p.neu === old || !old))) reverts++
+      const mine = priorEdits.filter((p) => p.file === file)
+      if (neu && mine.some((p) => p.old === neu && (p.neu === old || !old))) reverts++
+      if (rewritesOwnText(c.name, old, mine)) rewrites.set(file, (rewrites.get(file) ?? 0) + 1)
       priorEdits.push({ file, old, neu })
       if (PROSE.test(file)) proseFixes.add(file)
       else if (GATE.test(file)) gateFixes.add(file)
@@ -96,7 +105,7 @@ export function analyze(calls: Call[], gates: GateResult[] = []): Signals {
 
   return {
     rework: {
-      churn: [...edits].filter(([, n]) => n >= 3).map(([file, n]) => ({ file, edits: n })).sort((a, b) => b.edits - a.edits),
+      rewrites: [...rewrites].map(([file, n]) => ({ file, rewrites: n })).sort((a, b) => b.rewrites - a.rewrites),
       reverts,
       checkFailures: checkFailures + gates.filter((g) => !g.ok).length,
       failFixLoops,
@@ -116,7 +125,7 @@ export function analyze(calls: Call[], gates: GateResult[] = []): Signals {
 
 /** One number for the trend line: each rework event counts once. */
 export const reworkScore = (s: Signals) =>
-  s.rework.churn.length + s.rework.reverts + s.rework.checkFailures + s.rework.duplicateCalls + s.rework.denials
+  (s.rework.rewrites ?? []).reduce((n, r) => n + r.rewrites, 0) + s.rework.reverts + s.rework.checkFailures + s.rework.duplicateCalls + s.rework.denials
 
 /**
  * Deterministic next steps. Recurring failures point at a gate (lint rule, stricter type, hook)
@@ -152,6 +161,6 @@ export function suggest(current: Signals, history: Signals[]): string[] {
     if (runs >= 2 || r.count >= 3) out.push(`memory: "${r.pattern}" searched ${r.count}× here, in ${runs} run(s) → record where it lives`)
   }
   for (const r of current.memory.rereads) out.push(`memory: re-read ${r.file} ${r.reads}× without editing it`)
-  for (const c of current.rework.churn) out.push(`rework: ${c.file} edited ${c.edits}× in one run`)
+  for (const r of current.rework.rewrites) if (r.rewrites >= 2) out.push(`rework: rewrote its own text in ${r.file} ${r.rewrites}× in one run`)
   return out
 }

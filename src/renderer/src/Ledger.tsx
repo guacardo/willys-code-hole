@@ -123,7 +123,7 @@ export function LedgerSection(props: { tab: TabState }) {
                 <li>
                   <span>Rework</span>
                   <span class="muted">
-                    {r().signals.rework.churn.length} churn · {r().signals.rework.reverts} reverts · {r().signals.rework.checkFailures} check fails ·{' '}
+                    {r().signals.rework.rewrites.reduce((n, x) => n + x.rewrites, 0)} self-rewrites · {r().signals.rework.reverts} reverts · {r().signals.rework.checkFailures} check fails ·{' '}
                     {r().signals.rework.duplicateCalls} dupes · {r().signals.rework.denials} denials
                   </span>
                 </li>

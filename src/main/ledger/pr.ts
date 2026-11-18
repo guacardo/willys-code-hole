@@ -54,6 +54,12 @@ export async function ledgerCommit(repo: string, files: string[], plan: Plan, v:
   await sh(repo, 'git', ['commit', '--allow-empty', '-F', '-'], msg)
 }
 
+export function selfRewrites(s: Signals): string {
+  const n = s.rework.rewrites.reduce((t, r) => t + r.rewrites, 0)
+  const files = s.rework.rewrites.map((r) => `${r.file.split('/').pop()}×${r.rewrites}`).join(', ')
+  return `${n} self-rewrites across ${s.rework.rewrites.length} files${files ? ` (${files})` : ''}`
+}
+
 const cell = (s: string) => s.replace(/\|/g, '\\|').replace(/\n/g, ' ')
 const code = (s: string) => `\`${s.replace(/`/g, '')}\``
 
@@ -85,7 +91,7 @@ export function prBody(r: {
   const s = r.signals
   if (s) {
     out.push(
-      `| Rework | ${s.rework.churn.length} churned files · ${s.rework.reverts} reverts · ${s.rework.checkFailures} check failures (${s.rework.failFixLoops} fixed) · ${s.rework.duplicateCalls} duplicate calls · ${s.rework.denials} denials |`,
+      `| Rework | ${selfRewrites(s)} · ${s.rework.reverts} reverts · ${s.rework.checkFailures} check failures (${s.rework.failFixLoops} fixed) · ${s.rework.duplicateCalls} duplicate calls · ${s.rework.denials} denials |`,
       `| Enforcement | ${Object.entries(s.enforcement.failureKinds).map(([k, n]) => `${k}×${n}`).join(', ') || 'no failure kinds'} · ${s.enforcement.gateFixes.length} gate fixes · ${s.enforcement.proseFixes.length} prose fixes |`,
       `| Memory | ${s.memory.orientationCalls} orienting calls (~${Math.round(s.memory.orientationChars / 4).toLocaleString()} tok) before first edit · ${s.memory.rereads.length} re-reads · ${s.memory.repeatedSearches.length} repeated searches |`,
     )
@@ -97,13 +103,13 @@ export function prBody(r: {
   return out.join('\n')
 }
 
-/** Pushes the current feature branch and opens its PR, or refreshes the body of the one already open. Never pushes the default branch. */
+/** Pushes the current feature branch and opens its PR, or refreshes the body of its open or merged one. Never pushes the default branch. */
 export async function publish(repo: string, title: string, body: string, branch?: string): Promise<string> {
   const main = await defaultBranch(repo)
   const head = branch ?? (await currentBranch(repo))
   if (!main || !head || head === main) throw new Error(`refusing to push ${head || 'detached HEAD'}: not a feature branch`)
   await sh(repo, 'git', ['push', '-u', 'origin', `${head}:${head}`])
-  const open = await sh(repo, 'gh', ['pr', 'view', head, '--json', 'url,state', '-q', 'select(.state=="OPEN") | .url']).catch(() => '')
+  const open = await sh(repo, 'gh', ['pr', 'view', head, '--json', 'url,state', '-q', 'select(.state!="CLOSED") | .url']).catch(() => '')
   if (open) {
     await sh(repo, 'gh', ['pr', 'edit', head, '--body-file', '-'], body)
     return open

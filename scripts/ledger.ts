@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import type { Plan, Signals, Verification, WorkCounts } from '../src/shared/types'
 import { analyze, suggest, type Call } from '../src/main/ledger/signals'
 import { changesSince, inferCombines, verifyPlan, workCounts } from '../src/main/ledger/verify'
-import { prBody, publish } from '../src/main/ledger/pr'
+import { prBody, publish, selfRewrites } from '../src/main/ledger/pr'
 
 const args = new Map<string, string>()
 for (let i = 2; i < process.argv.length; i++) {
@@ -84,7 +84,7 @@ function render(plan: Plan | null, v: Verification | null, work: WorkCounts, com
       '## Signals',
       '',
       `- calls ${s.calls} · context peak ${t.contextPeak.toLocaleString()} tok · output ${t.output.toLocaleString()} tok`,
-      `- rework: churn ${r.churn.map((c) => `${c.file.split('/').pop()}×${c.edits}`).join(', ') || 'none'} · reverts ${r.reverts} · check failures ${r.checkFailures} · fail→fix loops ${r.failFixLoops} · duplicate calls ${r.duplicateCalls} · denials ${r.denials}`,
+      `- rework: ${selfRewrites(s)} · reverts ${r.reverts} · check failures ${r.checkFailures} · fail→fix loops ${r.failFixLoops} · duplicate calls ${r.duplicateCalls} · denials ${r.denials}`,
       `- enforcement: failure kinds ${Object.entries(s.enforcement.failureKinds).map(([k, n]) => `${k}×${n}`).join(', ') || 'none'} · prose fixes ${s.enforcement.proseFixes.length} · gate fixes ${s.enforcement.gateFixes.length}`,
       `- memory: orientation ${s.memory.orientationCalls} calls / ${Math.round(s.memory.orientationChars / 4).toLocaleString()} tok before first edit · re-reads ${s.memory.rereads.length} · repeated searches ${s.memory.repeatedSearches.length}`,
     )

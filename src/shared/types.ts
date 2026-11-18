@@ -128,7 +128,7 @@ export type GateResult = { command: string; ok: boolean; kinds: Record<string, n
 
 export type Signals = {
   rework: {
-    churn: { file: string; edits: number }[]
+    rewrites: { file: string; rewrites: number }[]
     reverts: number
     checkFailures: number
     failFixLoops: number
