@@ -328,3 +328,4 @@ body.resizing .term, body.resizing iframe { pointer-events: none; }
 .status-done { color: var(--ok); } .status-partial { color: var(--warn); } .status-missing { color: var(--danger); }
 .ledger-why { font-size: 12px; color: var(--muted); white-space: pre-wrap; margin: 6px 0 0; }
 .ledger-suggestions { margin: 0; padding-left: 16px; font-size: 12px; }
+.ledger-pr { display: block; font-size: 12px; color: var(--accent); margin: 4px 0; }

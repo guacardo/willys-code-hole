@@ -4,7 +4,7 @@ import type { Plan } from '../../shared/types'
 
 export const PLAN_TOOL = 'mcp__code-hole__submit_plan'
 
-export const PLAN_PROMPT = `Code Hole measures plan vs. execution. Before editing code for any change that touches more than one file or adds, removes, or merges a function, class, type, or module, call ${PLAN_TOOL} once with the primitives you will create, extend, delete, or combine. Name real symbols (exported names, or Class.member) and repo-relative files. Don't resubmit to match what you did — deviations are reported back to you at the end for a one-line explanation each.`
+export const PLAN_PROMPT = `Code Hole measures plan vs. execution. Before editing code for any change that touches more than one file or adds, removes, or merges a function, class, type, or module, call ${PLAN_TOOL} once with the primitives you will create, extend, delete, or combine. Name real symbols (exported names, or Class.member) and repo-relative files. Don't resubmit to match what you did — deviations are reported back to you at the end for a one-line explanation each. Don't commit or push during a planned change: Code Hole moves it onto a feature branch, commits with the plan as trailers, pushes the branch and opens the PR.`
 
 const item = z.object({
   id: z.string().describe('Short stable id, e.g. "p1"'),

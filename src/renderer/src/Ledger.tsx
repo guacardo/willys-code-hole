@@ -61,6 +61,13 @@ export function LedgerSection(props: { tab: TabState }) {
           <strong>Ledger</strong>
           <Show when={run()}>{(r) => <span class="muted">{ACTIONS.map((a) => `${a} ${r().work[a]}`).join(' · ')}</span>}</Show>
         </div>
+        <Show when={run()?.pr}>
+          {(url) => (
+            <a class="ledger-pr" href={url()} onClick={(e) => (e.preventDefault(), void window.hole.openExternal(url()))}>
+              {url().replace(/^https:\/\/github\.com\//, '')}
+            </a>
+          )}
+        </Show>
         <Show when={props.tab.ledger?.trend.length}>
           <Bars trend={props.tab.ledger!.trend} />
           <div class="ledger-legend">

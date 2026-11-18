@@ -1,6 +1,7 @@
 import type { GateResult, ItemStatus, LedgerRun, Plan, TabEvent, Usage, Verification } from '../../shared/types'
 import { loadConfig } from '../config'
 import { gateCommands, runGate } from './gate'
+import { ensureFeatureBranch, ledgerCommit, prBody, publish } from './pr'
 import { analyze, suggest, type Call } from './signals'
 import { appendRun, readRuns, trendOf } from './store'
 import { changesSince, inferCombines, isRepo, snapshot, verifyPlan, workCounts } from './verify'
@@ -77,9 +78,11 @@ export class Tracker {
     this.explanation = undefined
     this.verification = undefined
     const root = await this.root()
-    this.planBase = root && (await isRepo(root)) ? await snapshot(root).catch(() => null) : null
+    const repo = root && (await isRepo(root)) ? root : null
+    this.planBase = repo ? await snapshot(repo).catch(() => null) : null
+    const branch = repo ? await ensureFeatureBranch(repo, plan).catch(() => null) : null
     this.emit({ type: 'plan', plan, statuses: { ...this.statuses } })
-    return `Plan recorded (${plan.items.length} items). The diff will be checked against it when you finish.`
+    return `Plan recorded (${plan.items.length} items).${branch ? ` Switched to feature branch ${branch}.` : ''} The diff will be checked against it when you finish; Code Hole then commits, pushes the branch and opens the PR — don't commit or push yourself.`
   }
 
   private edited(): string[] {
@@ -158,6 +161,15 @@ export class Tracker {
       suggestions: suggest(signals, history.map((r) => r.signals)),
     }
     if (!this.calls.length) return
+    if (this.plan && this.verification && this.planBase) {
+      const files = (await changesSince(repo, this.planBase.ref, undefined, this.planBase.untracked).catch(() => [])).map((c) => c.file)
+      try {
+        await ledgerCommit(repo, files, this.plan, this.verification, 'Co-Authored-By: Claude <noreply@anthropic.com>')
+        run.pr = await publish(repo, this.plan.goal, prBody({ ...run, plan: this.plan, verification: this.verification }))
+      } catch (err) {
+        this.emit({ type: 'status', text: `PR not opened: ${err instanceof Error ? err.message : String(err)}`.slice(0, 500) })
+      }
+    }
     appendRun(run)
     this.emit({ type: 'ledger', run, trend: trendOf([...history, run]) })
     if (this.verification) {

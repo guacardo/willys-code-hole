@@ -161,6 +161,7 @@ export type LedgerRun = {
   verification?: Verification
   gates: GateResult[]
   suggestions: string[]
+  pr?: string
 }
 
 export type HistoryItem =

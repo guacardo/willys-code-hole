@@ -1,13 +1,20 @@
 // Offline ledger report: verifies a plan against a git range and analyzes a Claude Code
 // transcript with the same code Code Hole runs live.
 //   npm run ledger -- --repo <dir> --base <ref> [--head <ref>] [--plan plan.json] [--transcript t.jsonl] [--out report.md]
+//     [--why why.md] [--pr]   (--pr pushes --head and opens/refreshes its PR; never the default branch)
 import { readFileSync, writeFileSync } from 'node:fs'
 import type { Plan, Signals, Verification, WorkCounts } from '../src/shared/types'
 import { analyze, suggest, type Call } from '../src/main/ledger/signals'
 import { changesSince, inferCombines, verifyPlan, workCounts } from '../src/main/ledger/verify'
+import { prBody, publish } from '../src/main/ledger/pr'
 
 const args = new Map<string, string>()
-for (let i = 2; i < process.argv.length; i += 2) args.set(process.argv[i].replace(/^--/, ''), process.argv[i + 1])
+for (let i = 2; i < process.argv.length; i++) {
+  const next = process.argv[i + 1]
+  const flag = process.argv[i].replace(/^--/, '')
+  if (next === undefined || next.startsWith('--')) args.set(flag, 'true')
+  else args.set(flag, process.argv[++i])
+}
 const repo = args.get('repo')!
 const base = args.get('base')!
 const head = args.get('head')
@@ -93,6 +100,11 @@ const plan = args.has('plan') ? (JSON.parse(readFileSync(args.get('plan')!, 'utf
 const v = plan ? verifyPlan(plan, changes, combines) : null
 const t = args.has('transcript') ? readTranscript(args.get('transcript')!) : null
 const s = t ? analyze(t.calls) : null
+if (v && args.has('why')) v.explanation = readFileSync(args.get('why')!, 'utf8')
 const md = render(plan, v, work, combines, s, t, s ? suggest(s, []) : [])
 if (args.has('out')) writeFileSync(args.get('out')!, md + '\n')
 console.log(md)
+if (args.has('pr') && plan && v) {
+  const body = prBody({ plan, verification: v, work, gates: [], signals: s ?? undefined, contextPeak: t?.contextPeak })
+  console.log(await publish(repo, args.get('title') ?? plan.goal, body, head))
+}
