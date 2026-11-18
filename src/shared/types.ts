@@ -25,7 +25,7 @@ export type HoleConfig = {
   defaultPermissionMode: PermissionMode
   shell?: string
   editor?: EditorId
-  projects?: Record<string, { devCommand?: string }>
+  projects?: Record<string, { devCommand?: string; gateCommand?: string }>
   voice?: { serverPath?: string; modelPath?: string; autoSend?: boolean }
   api?: { port?: number; login?: string }
   theme?: ThemeId
@@ -96,6 +96,74 @@ export type Usage = { input: number; output: number; cacheRead: number; costUsd:
 
 export type ImageAttachment = { media_type: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'; data: string; name?: string }
 
+export type WorkAction = 'create' | 'extend' | 'delete' | 'combine'
+
+export type PlanItem = {
+  id: string
+  action: WorkAction
+  primitive: string
+  files: string[]
+  symbols: string[]
+  from?: string[]
+  why: string
+}
+
+export type Plan = { goal: string; items: PlanItem[] }
+
+export type ItemStatus = 'pending' | 'touched' | 'done' | 'partial' | 'missing'
+
+export type ItemCheck = { id: string; status: ItemStatus; evidence: string[]; reason?: string }
+
+export type Drift = { file: string; added: string[]; removed: string[]; changed: string[] }
+
+export type Verification = {
+  items: ItemCheck[]
+  drift: Drift[]
+  explanation?: string
+}
+
+export type WorkCounts = Record<WorkAction, number>
+
+export type GateResult = { command: string; ok: boolean; kinds: Record<string, number>; output: string }
+
+export type Signals = {
+  rework: {
+    churn: { file: string; edits: number }[]
+    reverts: number
+    checkFailures: number
+    failFixLoops: number
+    duplicateCalls: number
+    denials: number
+  }
+  enforcement: {
+    failureKinds: Record<string, number>
+    proseFixes: string[]
+    gateFixes: string[]
+  }
+  memory: {
+    rereads: { file: string; reads: number }[]
+    repeatedSearches: { pattern: string; count: number }[]
+    orientationCalls: number
+    orientationChars: number
+  }
+  calls: number
+}
+
+export type LedgerRun = {
+  at: string
+  repo: string
+  sessionId?: string
+  usage?: Usage
+  contextPeak?: number
+  work: WorkCounts
+  signals: Signals
+  plan?: Plan
+  verification?: Verification
+  gates: GateResult[]
+  suggestions: string[]
+  pr?: string
+}
+
 export type HistoryItem =
   | { kind: 'user'; text: string; images?: ImageAttachment[] }
   | { kind: 'assistant'; text: string }
@@ -120,6 +188,10 @@ export type TabEvent =
   | { type: 'reset'; trigger: string }
   | { type: 'project_touched'; root: string; name: string }
   | { type: 'status'; text: string }
+  | { type: 'plan'; plan: Plan; statuses: Record<string, ItemStatus> }
+  | { type: 'gate'; result: GateResult }
+  | { type: 'verification'; verification: Verification }
+  | { type: 'ledger'; run: LedgerRun; trend: { at: string; work: WorkCounts; reworkScore: number; costUsd?: number }[] }
   | { type: 'error'; message: string }
   | { type: 'session_closed' }
   | { type: 'resync'; events: TabEvent[]; busy: boolean }

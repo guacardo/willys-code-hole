@@ -1,5 +1,5 @@
 import { createStore, produce } from 'solid-js/store'
-import type { ContextUsage, HarnessEvent, ImageAttachment, Layout, Loaded, ModelOption, PermissionDecision, Tab, Usage } from '../../shared/types'
+import type { ContextUsage, GateResult, HarnessEvent, ImageAttachment, ItemStatus, Layout, LedgerRun, Loaded, ModelOption, PermissionDecision, Plan, Tab, TabEvent, Usage, Verification } from '../../shared/types'
 
 export type Item =
   | { kind: 'user'; id: string; text: string; images?: ImageAttachment[] }
@@ -26,6 +26,10 @@ export type TabState = {
   pinnedProject: string | null
   paneOpen: boolean
   paneMode: 'dev' | 'git'
+  plan?: { plan: Plan; statuses: Record<string, ItemStatus> }
+  verification?: Verification
+  gates: GateResult[]
+  ledger?: { run: LedgerRun; trend: Extract<TabEvent, { type: 'ledger' }>['trend'] }
 }
 
 type State = {
@@ -53,6 +57,7 @@ export const emptyTabState = (): TabState => ({
   pinnedProject: null,
   paneOpen: false,
   paneMode: 'dev',
+  gates: [],
 })
 
 export function setPane(tabId: string, patch: Partial<Pick<TabState, 'paneOpen' | 'paneMode'>>) {
@@ -249,6 +254,21 @@ export function applyEvent(e: HarnessEvent) {
       break
     case 'status':
       t((s) => (s.status = e.text))
+      break
+    case 'plan':
+      t((s) => {
+        if (s.plan?.plan.goal !== e.plan.goal) s.verification = undefined
+        s.plan = { plan: e.plan, statuses: e.statuses }
+      })
+      break
+    case 'gate':
+      t((s) => (s.gates = [...s.gates.slice(-5), e.result]))
+      break
+    case 'verification':
+      t((s) => (s.verification = e.verification))
+      break
+    case 'ledger':
+      t((s) => (s.ledger = { run: e.run, trend: e.trend }))
       break
     case 'error':
       t((s) => {

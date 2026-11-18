@@ -13,6 +13,8 @@ import type { ContextUsage, HistoryItem, ImageAttachment, Loaded, PermissionDeci
 import { Inbox } from './inbox'
 import { claudeMdFiles, memoryIndex } from './loaded'
 import { candidatePaths, projectName, projectRootFor } from '../projects/resolve'
+import { PLAN_PROMPT, PLAN_TOOL, planServer } from '../ledger/plan'
+import { Tracker } from '../ledger/tracker'
 
 type Emit = (e: TabEvent) => void
 
@@ -28,6 +30,10 @@ export class TabSession {
   private historyLoaded = false
   private suppressNextResult = false
   private projects: string[] = []
+  private tracker = new Tracker(
+    () => projectRootFor(this.tab.cwd, this.tab.cwd),
+    (e) => this.emit(e),
+  )
 
   projectRoots() {
     return this.projects
@@ -137,6 +143,13 @@ export class TabSession {
       case 'compact':
       case 'user_echo':
       case 'project_touched':
+      case 'gate':
+      case 'verification':
+        this.log.push(e)
+        break
+      case 'plan':
+      case 'ledger':
+        this.log = this.log.filter((x) => x.type !== e.type)
         this.log.push(e)
         break
       default:
@@ -162,8 +175,23 @@ export class TabSession {
     const options: Options = {
       cwd: this.tab.cwd,
       settingSources: ['user', 'project', 'local'],
-      systemPrompt: { type: 'preset', preset: 'claude_code' },
+      systemPrompt: { type: 'preset', preset: 'claude_code', append: PLAN_PROMPT },
       includePartialMessages: true,
+      mcpServers: { 'code-hole': planServer((plan) => this.tracker.submitPlan(plan)) },
+      hooks: {
+        Stop: [
+          {
+            timeout: 300,
+            hooks: [
+              async (input) => {
+                const last = 'last_assistant_message' in input ? input.last_assistant_message : undefined
+                const reason = await this.tracker.onStop(last).catch(() => null)
+                return reason ? { decision: 'block', reason } : {}
+              },
+            ],
+          },
+        ],
+      },
       permissionMode: this.tab.permissionMode,
       canUseTool: (name, input, opts) => this.canUseTool(name, input, opts.signal, opts.suggestions ?? []),
       stderr: (data) => {
@@ -230,6 +258,7 @@ export class TabSession {
     this.streaming = ''
     this.emit({ type: 'user_echo', text, images: images.length ? images : undefined })
     this.emit({ type: 'turn_start' })
+    void this.tracker.turnStart()
     const content = images.length
       ? [
           ...images.map((im) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: im.media_type, data: im.data } })),
@@ -285,7 +314,7 @@ export class TabSession {
     signal: AbortSignal,
     suggestions: PermissionUpdate[],
   ): Promise<PermissionResult> {
-    if (this.alwaysAllow.has(name)) return { behavior: 'allow', updatedInput: input }
+    if (this.alwaysAllow.has(name) || name === PLAN_TOOL) return { behavior: 'allow', updatedInput: input }
     const requestId = randomUUID()
     const rules = suggestions.flatMap((s) =>
       s.type === 'addRules' || s.type === 'replaceRules'
@@ -390,13 +419,17 @@ export class TabSession {
       }
       case 'assistant': {
         if (msg.parent_tool_use_id) return
-        if (msg.context_usage) this.emit({ type: 'context', usage: contextFromMessage(msg.context_usage) })
+        if (msg.context_usage) {
+          this.emit({ type: 'context', usage: contextFromMessage(msg.context_usage) })
+          this.tracker.context(msg.context_usage.total_tokens)
+        }
         for (const block of msg.message.content) {
           if (block.type === 'text') {
             this.emit({ type: 'assistant_text', text: block.text })
             this.streaming = ''
           } else if (block.type === 'tool_use') {
             this.emit({ type: 'tool_use', id: block.id, name: block.name, input: (block.input ?? {}) as Record<string, unknown> })
+            this.tracker.toolUse(block.id, block.name, (block.input ?? {}) as Record<string, unknown>)
             void this.trackPaths(block.name, (block.input ?? {}) as Record<string, unknown>)
           }
         }
@@ -413,6 +446,7 @@ export class TabSession {
                 ? block.content
                 : (block.content ?? []).map((c) => (c.type === 'text' ? c.text : `[${c.type}]`)).join('\n')
             this.emit({ type: 'tool_result', id: block.tool_use_id, content: text, is_error: block.is_error ?? false })
+            this.tracker.toolResult(block.tool_use_id, text, block.is_error ?? false)
           }
         }
         return
@@ -428,19 +462,16 @@ export class TabSession {
         this.turnsCompleted++
         void this.refreshContext()
         const u = msg.usage
-        this.emit({
-          type: 'turn_done',
-          is_error: msg.is_error,
-          result: msg.subtype === 'success' ? msg.result : msg.subtype,
-          usage: {
-            input: u.input_tokens,
-            output: u.output_tokens,
-            cacheRead: u.cache_read_input_tokens ?? 0,
-            costUsd: msg.total_cost_usd,
-            turns: msg.num_turns,
-            durationMs: msg.duration_ms,
-          },
-        })
+        const usage = {
+          input: u.input_tokens,
+          output: u.output_tokens,
+          cacheRead: u.cache_read_input_tokens ?? 0,
+          costUsd: msg.total_cost_usd,
+          turns: msg.num_turns,
+          durationMs: msg.duration_ms,
+        }
+        this.emit({ type: 'turn_done', is_error: msg.is_error, result: msg.subtype === 'success' ? msg.result : msg.subtype, usage })
+        void this.tracker.turnDone(this.tab.sessionId, usage).catch(() => undefined)
         return
       }
       default:

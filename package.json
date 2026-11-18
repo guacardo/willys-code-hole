@@ -13,7 +13,8 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "workbench": "electron-vite build && electron .",
-    "postinstall": "electron-rebuild -f -w node-pty"
+    "postinstall": "electron-rebuild -f -w node-pty",
+    "ledger": "esbuild scripts/ledger.ts --bundle --platform=node --format=esm --packages=external --outfile=out/ledger.mjs --log-level=warning && node out/ledger.mjs"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.281",
@@ -25,7 +26,8 @@
     "marked": "^18.0.14",
     "marked-highlight": "^2.2.4",
     "node-pty": "^1.1.0",
-    "solid-js": "^1.9.15"
+    "solid-js": "^1.9.15",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.2.0",
