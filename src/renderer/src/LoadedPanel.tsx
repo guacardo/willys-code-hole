@@ -1,5 +1,7 @@
 import { For, Show } from 'solid-js'
 import type { ContextUsage, Loaded } from '../../shared/types'
+import { LedgerSection } from './Ledger'
+import type { TabState } from './store'
 
 const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n))
 
@@ -92,7 +94,7 @@ function ContextSection(props: { usage: ContextUsage }) {
   )
 }
 
-export default function LoadedPanel(props: { loaded?: Loaded; context?: ContextUsage; starting: boolean; width?: number; onClose: () => void }) {
+export default function LoadedPanel(props: { loaded?: Loaded; context?: ContextUsage; starting: boolean; tab: TabState; width?: number; onClose: () => void }) {
   return (
     <div class="loaded" style={{ width: props.width ? `${props.width}px` : undefined }}>
       <div class="loaded-head">
@@ -101,6 +103,7 @@ export default function LoadedPanel(props: { loaded?: Loaded; context?: ContextU
           ×
         </button>
       </div>
+      <LedgerSection tab={props.tab} />
       <Show when={props.context}>{(u) => <ContextSection usage={u()} />}</Show>
       <Show when={props.loaded} fallback={<p class="muted">{props.starting ? 'Starting Claude Code…' : 'Session not started. Send a message or reopen the tab.'}</p>}>
         {(l) => (

@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Transcript from './Transcript'
 import LoadedPanel from './LoadedPanel'
 import InfoButton from './InfoButton'
+import { PlanStrip } from './Ledger'
 import ProjectPane from './ProjectPane'
 import Splitter, { persistedWidth } from './Splitter'
 import MicButton, { useMic } from './MicButton'
@@ -365,6 +366,7 @@ export default function App() {
                 <InfoButton tab={ts()} open={showLoaded()} onClick={() => setShowLoaded(!showLoaded())} />
               </header>
 
+              <PlanStrip tab={ts()} />
               <div class="body">
                 <div class="scrollwrap">
                   <div class="scroll" ref={scroller} onScroll={onScroll}>
@@ -389,7 +391,7 @@ export default function App() {
                 </Show>
                 <Show when={showLoaded()}>
                   <Splitter onDrag={(dx) => setLoadedW(loadedW() - dx)} onDouble={() => setLoadedW(380)} />
-                  <LoadedPanel loaded={ts().loaded} context={ts().context} starting={ts().starting} width={loadedW()} onClose={() => setShowLoaded(false)} />
+                  <LoadedPanel loaded={ts().loaded} context={ts().context} starting={ts().starting} tab={ts()} width={loadedW()} onClose={() => setShowLoaded(false)} />
                 </Show>
               </div>
 
